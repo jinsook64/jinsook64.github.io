@@ -1,0 +1,117 @@
+<html>
+	<head>
+		<title>Teachable Machine Image Model with upload</title>
+		<!-- CSS only -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+
+	</head>
+	<body style="text-align:center;">
+		<div>
+            <p>
+                
+            </p>
+			<h3>
+				Cat Breeds Classifier
+            </h3>
+            <p>
+
+            </p>
+			<p>
+				[Dataset]
+			</p>
+			<p>
+				Russian Blue / Abbisian / Persian
+			</p>
+		</div>
+		<img id="imagePreview" style="width:300px;" />
+		<input id="imageUpload" type="file" style="display:none;"/>
+		<br />
+		<button type="button" class="btn btn-primary" onclick="imageUpload.click();" style="margin:10px;">Upload Image</button>
+		
+		<div id="ment" style="margin:10px;">
+			
+		</div>
+
+		<div id="label-container"></div>
+		
+		<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+		
+		<!-- JS, Popper.js, and jQuery -->
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+		
+		<script type="text/javascript">
+			// More API functions here:
+			// https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+			// the link to your model provided by Teachable Machine export panel
+			const URL = './my_model/';
+
+			let model, labelContainer, maxPredictions;
+
+			// Load the image model 
+			async function init() {
+				const modelURL = URL + 'model.json';
+				const metadataURL = URL + 'metadata.json';
+
+				// load the model and metadata
+				model = await tmImage.load(modelURL, metadataURL);
+				maxPredictions = model.getTotalClasses();
+
+				labelContainer = document.getElementById('label-container');
+				for (let i = 0; i < maxPredictions; i++) {
+					// and class labels
+					labelContainer.appendChild(document.createElement('div'));
+				}
+			}
+
+			async function predict() {
+				// predict can take in an image, video or canvas html element
+				var image = document.getElementById('imagePreview');
+				const prediction = await model.predict(image, false);
+				
+				var bestClassName = "";
+				var bestClassProb = 0;
+				
+				for (let i = 0; i < maxPredictions; i++) {
+					// const classPrediction =
+					//	prediction[i].className + ': ' + prediction[i].probability.toFixed(2);
+					const classPrediction = prediction[i].className + '<div class="progress"><div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="'+prediction[i].probability.toFixed(2)*100+'" aria-valuemin="0" aria-valuemax="100" style="width: ' + prediction[i].probability.toFixed(2)*100 + '%"></div></div>';
+					
+					labelContainer.childNodes[i].innerHTML = classPrediction;
+					if (prediction[i].probability > bestClassProb) {
+						bestClassProb = prediction[i].probability;
+						bestClassName = prediction[i].className;
+					}
+				}
+				
+				document.getElementById("ment").innerHTML = "Prediction: " + bestClassName;
+				
+			}
+		</script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			function readURL(input) {
+				if (input.files && input.files[0]) {
+					var reader = new FileReader();
+					reader.onload = function (e) {
+						$('#imagePreview').attr('src', e.target.result);
+						// $('#imagePreview').css('background-image', 'url(' + e.target.result + ')');
+						$('#imagePreview').hide();
+						$('#imagePreview').fadeIn(650);
+					};
+					reader.readAsDataURL(input.files[0]);
+					init().then(() => {
+						predict();
+					});
+				}
+			}
+			$('#imageUpload').change(function () {
+				readURL(this);
+			});
+		</script>
+	</body>
+</html>
